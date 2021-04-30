@@ -279,31 +279,29 @@ ggplot(data  = math,
 # Within-Between Model                                                                                                      #
 #----------------------------------------------------------   
 ###
-m.rc2 <- lmer(math ~ ses.cc + ses.m + sex + homework + public + ratio + 
+m.rcwb <- lmer(math ~ ses.cc + ses.m + sex + homework + public + ratio + 
               + (1 + ses.cc|schid), data = math)
 
-summary(m.rc2)
+summary(m.rcwb)
 
-var.ri2 <- as.data.frame(VarCorr(m.rc2)) 
-
-icc(m.rc2)
-r2(m.rc2)
+icc(m.rcwb)
+r2(m.rcwb)
 
 # Almost 16% of variation explained by difference between clusters
 # Contextual covariates no important
 
-fixef(m.rc2) # Print fixed effects 
-coef(m.rc2)$schid # Print coefficients by school 
-ranef(m.rc2)$schid # Print random effects 
-dotplot(ranef(m.rc2, condVar = TRUE))  # plot random intercepts
+fixef(m.rcwb) # Print fixed effects 
+coef(m.rcwb)$schid # Print coefficients by school 
+ranef(m.rcwb)$schid # Print random effects 
+dotplot(ranef(m.rcwb, condVar = TRUE))  # plot random intercepts
 
 
 # Check normality
-qqnorm(resid(m.rc2),col="blue",lwd=2)
+qqnorm(resid(m.rcwb),col="blue",lwd=2)
 
 ### with  sjPlot: Plot Interaction
-plot_model(m.rc2, type = "int", terms = c("ses.m", "ses.cc"), mdrt.values= "minmax")
-plot_model(m.rc2, type = "pred", terms = c("ses.cc", "schid"))
+plot_model(m.rcwb, type = "int", terms = c("ses.m", "ses.cc"), mdrt.values= "minmax")
+plot_model(m.rcwb, type = "pred", terms = c("ses.cc", "schid"))
 
 
 
@@ -317,8 +315,12 @@ plot_model(m.rc2, type = "pred", terms = c("ses.cc", "schid"))
 # "anova" in lme4 automatically refits models using maximum likelihood estimation (MLE) if necessary 
 # It also shows AIC and BIC
 anova(m.null, m.rc1)
-anova(m.rc1, m.rc2)
+anova(m.null, m.rc2)
+anova(m.rc2, m.rc3)
+anova(m.rc3, m.complete)
+
+anova(m.complete, m.rcwb)
 
 # Also checking AIC and BIC of all models
-AIC(m.ols, m.null, m.rc1, m.rc2)
-BIC(m.ols, m.null, m.rc1, m.rc2)
+AIC(m.ols, m.null, m.rc1, m.rc2, m.rc3, m.complete, m.rcwb)
+BIC(m.ols, m.null, m.rc1, m.rc2, m.rc3, m.complete, m.rcwb)
