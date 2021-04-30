@@ -112,6 +112,18 @@ ggplot(data  = math,
 
 ########################################################### 
 ###                                                       #
+###   Confounding: SES ~?                                 #
+###                                                       #
+###########################################################
+summary(lm(ses ~ sex + white + parented, data = math))
+
+# Can't use race since it's confounding with SES. Same with Parent Education.
+
+
+
+
+########################################################### 
+###                                                       #
 ###   Baseline linear model (not multilevel)              #
 ###                                                       #
 ###########################################################
@@ -187,9 +199,17 @@ m.rc1 <- lmer(math ~ ses + sex + homework + white + public + ratio +
 
 summary(m.rc1)
 
-var.rc1<-as.data.frame(VarCorr(m.rc1))
-# Reduction in variance explained at level-1 (residual)
-(var.null[2,4]-var.rc1[4,4])/var.null[2,4] 
+var.rc1 <- as.data.frame(VarCorr(m.rc1))
 
-dotplot(ranef(m.rc1, condVar = TRUE), strip = F)
+icc(m.rc1)
+
+# Almost 14% of variation explained by difference between clusters
+# Contextual covariates no important
+
+fixef(m.rc1) # Print fixed effects 
+coef(m.rc1)$schid # Print coefficients by school 
+ranef(m.rc1)$schid # Print random effects 
+dotplot(ranef(m.rc1, condVar = TRUE))  # plot random intercepts
+
+
 
