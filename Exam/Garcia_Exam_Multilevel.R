@@ -7,6 +7,7 @@ library(lattice) # Useful graphs for multilevel models
 library(performance) # for ICC measures 
 library(psych) # For descriptive statistics 
 library(readstata13) # to read data in dta
+library(sjPlot) # plot interaction within-between
 
 
 # Loading data
@@ -203,13 +204,50 @@ var.rc1 <- as.data.frame(VarCorr(m.rc1))
 
 icc(m.rc1)
 
-# Almost 14% of variation explained by difference between clusters
+# Almost 18% of variation explained by difference between clusters
 # Contextual covariates no important
 
 fixef(m.rc1) # Print fixed effects 
 coef(m.rc1)$schid # Print coefficients by school 
 ranef(m.rc1)$schid # Print random effects 
 dotplot(ranef(m.rc1, condVar = TRUE))  # plot random intercepts
+
+
+
+### predicted values and interaction with the SES var
+math$pred1<- predict(m.rc1)
+
+ggplot(data  = math,
+       aes(ses, pred1,
+           col = as.factor(schid))) +
+  geom_point(position = "jitter", alpha= .05) +  
+  theme_light()+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size = 1.5) 
+
+# Now you can compare with initial values and check that this is working right now
+
+
+
+
+
+#----------------------------------------------------------
+# Within-Between Model                                                                                                      #
+#----------------------------------------------------------   
+###
+m.rc2 <- lmer(math ~ ses.cc + ses.m + sex + homework + public + ratio + 
+              + (1 + ses.cc|schid), data = math)
+
+summary(m.rc2)
+
+var.ri2 <- as.data.frame(VarCorr(m.rc2)) 
+
+
+### with  sjPlot: Plot Interaction
+
+plot_model(m.rc2, type = "int", terms = c("ses.m", "ses.cc"), mdrt.values= "minmax")
+plot_model(m.rc2, type = "pred", terms = c("ses.cc", "sector"))
+
 
 
 
