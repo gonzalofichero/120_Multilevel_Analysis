@@ -110,5 +110,43 @@ ggplot(data  = math,
   theme_light()
 
 
+########################################################### 
+###                                                       #
+###   Baseline linear model (not multilevel)              #
+###                                                       #
+###########################################################
+
+### Running OLS model for no-cluster covariates
+m.ols <- lm(math ~ ses + sex + homework + white + public + ratio, data = math)
+summary(m.ols)
+
+
+
+########################################################### 
+###                                                       #
+###   Multilevel (random effects) models                  #
+###                                                       #
+###########################################################
+
+
+#----------------------------------------------------------
+# Random Intercept Only - null model (one-way ANOVA)                                                                                               #
+#----------------------------------------------------------
+###
+m.null <- lmer(math ~ 1 
+               + (1|schid), data = math)  # Can also be written without "1"(intercept) in the fixed part 
+
+summary(m.null)
+
+var.null <- as.data.frame(VarCorr(m.null))
+icc(m.null)
+
+# Almost 25% of variation explained by difference between clusters -> we need multilevel, for sure...
+
+fixef(m.null) # Print fixed effects 
+coef(m.null)$schid # Print coefficients by school 
+ranef(m.null)$schid # Print random effects 
+dotplot(ranef(m.null, condVar = TRUE))  # plot random intercepts
+
 
 
