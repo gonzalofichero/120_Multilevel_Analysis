@@ -203,6 +203,7 @@ summary(m.rc1)
 var.rc1 <- as.data.frame(VarCorr(m.rc1))
 
 icc(m.rc1)
+r2(m.rc1)
 
 # Almost 18% of variation explained by difference between clusters
 # Contextual covariates no important
@@ -212,6 +213,8 @@ coef(m.rc1)$schid # Print coefficients by school
 ranef(m.rc1)$schid # Print random effects 
 dotplot(ranef(m.rc1, condVar = TRUE))  # plot random intercepts
 
+### Significance test for this Variance part of the model (lmerTest)
+ranova(m.rc1)
 
 
 ### predicted values and interaction with the SES var
@@ -242,12 +245,36 @@ summary(m.rc2)
 
 var.ri2 <- as.data.frame(VarCorr(m.rc2)) 
 
+icc(m.rc2)
+r2(m.rc2)
+
+# Almost 16% of variation explained by difference between clusters
+# Contextual covariates no important
+
+fixef(m.rc2) # Print fixed effects 
+coef(m.rc2)$schid # Print coefficients by school 
+ranef(m.rc2)$schid # Print random effects 
+dotplot(ranef(m.rc2, condVar = TRUE))  # plot random intercepts
+
 
 ### with  sjPlot: Plot Interaction
-
 plot_model(m.rc2, type = "int", terms = c("ses.m", "ses.cc"), mdrt.values= "minmax")
-plot_model(m.rc2, type = "pred", terms = c("ses.cc", "sector"))
+plot_model(m.rc2, type = "pred", terms = c("ses.cc", "schid"))
 
 
 
+########################################################### 
+###                                                       #
+### Model Comparison                                      #
+###                                                       #
+########################################################### 
 
+# Comparing models with different fixed effects requires MLE (REML is default in lme4)
+# "anova" in lme4 automatically refits models using maximum likelihood estimation (MLE) if necessary 
+# It also shows AIC and BIC
+anova(m.null, m.rc1)
+anova(m.rc1, m.rc2)
+
+# Also checking AIC and BIC of all models
+AIC(m.ols, m.null, m.rc1, m.rc2)
+BIC(m.ols, m.null, m.rc1, m.rc2)
