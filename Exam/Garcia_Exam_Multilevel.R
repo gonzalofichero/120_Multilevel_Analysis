@@ -129,7 +129,7 @@ summary(lm(ses ~ sex + white + parented, data = math))
 ###########################################################
 
 ### Running OLS model for no-cluster covariates
-m.ols <- lm(math ~ ses + sex + homework + white + public + ratio, data = math)
+m.ols <- lm(math ~ ses + sex + homework + public + ratio, data = math)
 summary(m.ols)
 
 
@@ -194,7 +194,7 @@ head(math) # Check
 # Random coefficient with SES random slope                                                                                             #
 #----------------------------------------------------------
 ###  
-m.rc1 <- lmer(math ~ ses + sex + homework + white + public + ratio +
+m.rc1 <- lmer(math ~ ses + sex + homework + public + ratio +
               + (1 + ses|schid), data = math)
 
 summary(m.rc1)
