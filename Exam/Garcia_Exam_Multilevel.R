@@ -121,6 +121,33 @@ summary(lm(ses ~ sex + white + parented, data = math))
 # Can't use race since it's confounding with SES. Same with Parent Education.
 
 
+#----------------------------------------------------------
+# Centering SES: for individual and for school
+#----------------------------------------------------------
+### Grand-centering - Center individual SES by subtracting the mean SES
+math$ses.c <- (math$ses - mean(math$ses, na.rm = TRUE)) 
+
+### Group-centering
+dat.m <- aggregate(dat = math, ses ~ schid, FUN = mean)
+math <- merge(x = math, y = dat.m, by = "schid", suffixes = c("",".m"))
+
+math$ses.cc <- (math$ses - math$ses.m) # Group-centered variable 
+head(math) # Check
+
+
+#----------------------------------------------------------
+# Centering HOMEWORK: for individual and for school
+#----------------------------------------------------------
+### Grand-centering - Center individual SES by subtracting the mean SES
+math$hwk.c <- (math$homework - mean(math$homework, na.rm = TRUE)) 
+
+### Group-centering
+dat.h <- aggregate(dat = math, homework ~ schid, FUN = mean)
+math <- merge(x = math, y = dat.h, by = "schid", suffixes = c("",".m"))
+
+math$hwk.cc <- (math$homework - math$homework.m) # Group-centered variable 
+head(math) # Check
+
 
 
 ########################################################### 
@@ -161,64 +188,78 @@ coef(m.null)$schid # Print coefficients by school
 ranef(m.null)$schid # Print random effects 
 dotplot(ranef(m.null, condVar = TRUE))  # plot random intercepts
 
-
-#----------------------------------------------------------
-# Centering SES: for individual and for school
-#----------------------------------------------------------
-### Grand-centering - Center individual SES by subtracting the mean SES
-math$ses.c <- (math$ses - mean(math$ses, na.rm = TRUE)) 
-
-### Group-centering
-dat.m <- aggregate(dat = math, ses ~ schid, FUN = mean)
-math <- merge(x = math, y = dat.m, by = "schid", suffixes = c("",".m"))
-
-math$ses.cc <- (math$ses - math$ses.m) # Group-centered variable 
-head(math) # Check
+# Check normality
+qqnorm(resid(m.null),col="blue",lwd=2)
 
 
 #----------------------------------------------------------
-# Centering HOMEWORK: for individual and for school
+# Random coefficient: Only SES as level-1                                                                                           #
 #----------------------------------------------------------
-### Grand-centering - Center individual SES by subtracting the mean SES
-math$hwk.c <- (math$homework - mean(math$homework, na.rm = TRUE)) 
+###  
+m.rc1 <- lmer(math ~ ses + public + ratio +
+                     + (1 + ses|schid), data = math)
 
-### Group-centering
-dat.h <- aggregate(dat = math, homework ~ schid, FUN = mean)
-math <- merge(x = math, y = dat.h, by = "schid", suffixes = c("",".m"))
+summary(m.rc1)
 
-math$hwk.cc <- (math$homework - math$homework.m) # Group-centered variable 
-head(math) # Check
+icc(m.rc1)
+r2(m.rc1)
 
+
+#----------------------------------------------------------
+# Random coefficient: Only Homework as level-1                                                                                           #
+#----------------------------------------------------------
+###  
+m.rc2 <- lmer(math ~ homework + public + ratio +
+                + (1 + homework|schid), data = math)
+
+summary(m.rc2)
+
+icc(m.rc2)
+r2(m.rc2)
+
+
+#----------------------------------------------------------
+# Random coefficient: Homework + SES as level-1                                                                                           #
+#----------------------------------------------------------
+###  
+m.rc3 <- lmer(math ~ homework + ses + public + ratio +
+                + (1 + homework + ses |schid), data = math)
+
+summary(m.rc3)
+
+icc(m.rc3)
+r2(m.rc3)
 
 
 #----------------------------------------------------------
 # Random coefficient with SES random slope                                                                                             #
 #----------------------------------------------------------
 ###  
-m.rc1 <- lmer(math ~ ses + sex + homework + public + ratio +
-              + (1 + ses|schid), data = math)
+m.complete <- lmer(math ~ ses + sex + homework + public + ratio +
+              + (1 + ses + homework |schid), data = math)
 
-summary(m.rc1)
+summary(m.complete)
 
-var.rc1 <- as.data.frame(VarCorr(m.rc1))
-
-icc(m.rc1)
-r2(m.rc1)
+icc(m.complete)
+r2(m.complete)
 
 # Almost 18% of variation explained by difference between clusters
 # Contextual covariates no important
 
-fixef(m.rc1) # Print fixed effects 
-coef(m.rc1)$schid # Print coefficients by school 
-ranef(m.rc1)$schid # Print random effects 
-dotplot(ranef(m.rc1, condVar = TRUE))  # plot random intercepts
+fixef(m.complete) # Print fixed effects 
+coef(m.complete)$schid # Print coefficients by school 
+ranef(m.complete)$schid # Print random effects 
+dotplot(ranef(m.complete, condVar = TRUE))  # plot random intercepts
+
+# Check normality
+qqnorm(resid(m.complete),col="blue",lwd=2)
 
 ### Significance test for this Variance part of the model (lmerTest)
-ranova(m.rc1)
+ranova(m.complete)
 
 
 ### predicted values and interaction with the SES var
-math$pred1<- predict(m.rc1)
+math$pred1<- predict(m.complete)
 
 ggplot(data  = math,
        aes(ses, pred1,
@@ -256,6 +297,9 @@ coef(m.rc2)$schid # Print coefficients by school
 ranef(m.rc2)$schid # Print random effects 
 dotplot(ranef(m.rc2, condVar = TRUE))  # plot random intercepts
 
+
+# Check normality
+qqnorm(resid(m.rc2),col="blue",lwd=2)
 
 ### with  sjPlot: Plot Interaction
 plot_model(m.rc2, type = "int", terms = c("ses.m", "ses.cc"), mdrt.values= "minmax")
