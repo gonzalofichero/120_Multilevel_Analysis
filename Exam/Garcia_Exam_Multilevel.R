@@ -16,3 +16,101 @@ math <- read.dta13("Exam/Exam21.dta")
 glimpse(math)
 
 
+# Let's check for the amount of schools and kids
+length(unique(math$schid))
+length(unique(paste(math$stuid,"-",math$schid))) # 23 schools, 519 students
+# The Student ID is repeated through schools... Maybe creating a new ID
+
+
+# Let's do some quick plots and see correlations between covariates
+# We are gonna focus on: ses, homework (as control), sex, race, public (contextual), ratio (as control contextual)
+# We need to find literature about this!
+
+
+#----------------------------------------------------------
+# Distributions and basic descriptive 
+#----------------------------------------------------------
+hist(math$math)
+hist(with(math, tapply(math, schid, mean))) # histogram of cluster-averages 
+
+densityplot(~ math, groups = schid, math,
+            plot.points = FALSE) 
+
+
+
+#----------------------------------------------------------
+# Plots: math ~ ses
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(ses, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light()+
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+
+
+
+#----------------------------------------------------------
+# Plots: math ~ homework
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(homework, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light()+
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+
+
+#----------------------------------------------------------
+# Plots: math ~ ratio
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(ratio, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light() +
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+
+
+
+#----------------------------------------------------------
+# Plots: math ~ sex
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(as.factor(sex), math)) + # colours for schools 
+  geom_boxplot() +
+  theme_light() +
+  facet_wrap(~ schid)
+
+
+#----------------------------------------------------------
+# Plots: math ~ race
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(as.factor(white), math)) + # colours for schools 
+  geom_boxplot() +
+  theme_light() +
+  facet_wrap(~ schid)
+
+
+#----------------------------------------------------------
+# Plots: math ~ public
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(as.factor(public), math)) + # colours for schools 
+  geom_boxplot() +
+  theme_light() +
+  facet_wrap(~ schid)
+
+
+
+
