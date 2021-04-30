@@ -223,7 +223,7 @@ r2(m.rc2)
 #----------------------------------------------------------
 ###  
 m.rc3 <- lmer(math ~ homework + ses + public + ratio +
-                + (1 + homework + ses |schid), data = math)
+                + (1 + ses |schid), data = math)
 
 summary(m.rc3)
 
@@ -236,7 +236,7 @@ r2(m.rc3)
 #----------------------------------------------------------
 ###  
 m.complete <- lmer(math ~ ses + sex + homework + public + ratio +
-              + (1 + ses + homework |schid), data = math)
+              + (1 + ses |schid), data = math)
 
 summary(m.complete)
 
