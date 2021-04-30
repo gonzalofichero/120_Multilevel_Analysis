@@ -31,7 +31,6 @@ length(unique(paste(math$stuid,"-",math$schid))) # 23 schools, 519 students
 # Distributions and basic descriptive 
 #----------------------------------------------------------
 hist(math$math)
-hist(with(math, tapply(math, schid, mean))) # histogram of cluster-averages 
 
 densityplot(~ math, groups = schid, math,
             plot.points = FALSE) 
@@ -106,10 +105,9 @@ ggplot(data  = math,
 # Plots: math ~ public
 #----------------------------------------------------------
 ggplot(data  = math,
-       aes(as.factor(public), math)) + # colours for schools 
-  geom_boxplot() +
-  theme_light() +
-  facet_wrap(~ schid)
+       aes(x = math, col=as.factor(public))) + # colours for schools 
+  geom_density()+
+  theme_light()
 
 
 
