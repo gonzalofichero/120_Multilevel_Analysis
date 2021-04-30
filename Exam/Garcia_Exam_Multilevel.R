@@ -149,4 +149,16 @@ ranef(m.null)$schid # Print random effects
 dotplot(ranef(m.null, condVar = TRUE))  # plot random intercepts
 
 
+#----------------------------------------------------------
+# Centering SES: for individual and for school
+#----------------------------------------------------------
+### Grand-centering - Center individual SES by subtracting the mean SES
+math$ses.c <- (math$ses - math$meanses) 
+
+### Group-centering
+dat.m <- aggregate(dat = math, ses ~ schid, FUN = mean)
+math <- merge(x = math, y = dat.m, by = "schid", suffixes = c("",".m"))
+
+math$ses.cc <- (math$ses - math$ses.m) # Group-centered variable 
+head(math) # Check
 
