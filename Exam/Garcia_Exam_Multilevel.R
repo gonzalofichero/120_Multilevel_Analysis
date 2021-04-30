@@ -153,12 +153,26 @@ dotplot(ranef(m.null, condVar = TRUE))  # plot random intercepts
 # Centering SES: for individual and for school
 #----------------------------------------------------------
 ### Grand-centering - Center individual SES by subtracting the mean SES
-math$ses.c <- (math$ses - math$meanses) 
+math$ses.c <- (math$ses - mean(math$ses, na.rm = TRUE)) 
 
 ### Group-centering
 dat.m <- aggregate(dat = math, ses ~ schid, FUN = mean)
 math <- merge(x = math, y = dat.m, by = "schid", suffixes = c("",".m"))
 
 math$ses.cc <- (math$ses - math$ses.m) # Group-centered variable 
+head(math) # Check
+
+
+#----------------------------------------------------------
+# Centering HOMEWORK: for individual and for school
+#----------------------------------------------------------
+### Grand-centering - Center individual SES by subtracting the mean SES
+math$hwk.c <- (math$homework - mean(math$homework, na.rm = TRUE)) 
+
+### Group-centering
+dat.h <- aggregate(dat = math, homework ~ schid, FUN = mean)
+math <- merge(x = math, y = dat.h, by = "schid", suffixes = c("",".m"))
+
+math$hwk.cc <- (math$homework - math$dat.h) # Group-centered variable 
 head(math) # Check
 
