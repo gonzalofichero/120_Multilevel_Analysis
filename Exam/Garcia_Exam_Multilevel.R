@@ -86,20 +86,18 @@ ggplot(data  = math,
 # Plots: math ~ sex
 #----------------------------------------------------------
 ggplot(data  = math,
-       aes(as.factor(sex), math)) + # colours for schools 
-  geom_boxplot() +
-  theme_light() +
-  facet_wrap(~ schid)
+       aes(color = as.factor(sex), x = math)) + # colours for schools 
+  geom_density() +
+  theme_light()
 
 
 #----------------------------------------------------------
 # Plots: math ~ race
 #----------------------------------------------------------
 ggplot(data  = math,
-       aes(as.factor(white), math)) + # colours for schools 
-  geom_boxplot() +
-  theme_light() +
-  facet_wrap(~ schid)
+       aes(color = as.factor(white), x = math)) + # colours for schools 
+  geom_density() +
+  theme_light()
 
 
 #----------------------------------------------------------
