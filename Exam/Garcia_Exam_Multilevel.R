@@ -173,6 +173,23 @@ math$hwk.c <- (math$homework - mean(math$homework, na.rm = TRUE))
 dat.h <- aggregate(dat = math, homework ~ schid, FUN = mean)
 math <- merge(x = math, y = dat.h, by = "schid", suffixes = c("",".m"))
 
-math$hwk.cc <- (math$homework - math$dat.h) # Group-centered variable 
+math$hwk.cc <- (math$homework - math$homework.m) # Group-centered variable 
 head(math) # Check
+
+
+
+#----------------------------------------------------------
+# Random coefficient with SES random slope                                                                                             #
+#----------------------------------------------------------
+###  
+m.rc1 <- lmer(math ~ ses + sex + homework + white + public + ratio +
+              + (1 + ses|schid), data = math)
+
+summary(m.rc1)
+
+var.rc1<-as.data.frame(VarCorr(m.rc1))
+# Reduction in variance explained at level-1 (residual)
+(var.null[2,4]-var.rc1[4,4])/var.null[2,4] 
+
+dotplot(ranef(m.rc1, condVar = TRUE), strip = F)
 
