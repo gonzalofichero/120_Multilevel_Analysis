@@ -216,7 +216,7 @@ summary(lm(ses ~ sex + white + parented, data = math))
 # Can't use race since it's confounding with SES. Same with Parent Education.
 ```
 
-
+We observe that Race and Parents Education (characteristics of individual: level-1) are correlated to SES. We understand that SES summarizes the explanatory power of these 2 covariates and we will use only SES for modeling.
 
 
 
@@ -224,6 +224,42 @@ summary(lm(ses ~ sex + white + parented, data = math))
 
 Based in these last observations, we decided to use the following covariates:
 
-* 
+* SES (level-1)
+
+* Sex (level-1, although we are expecting no statistical significance)
+
+* Homework (level-1)
+
+* Public (level-2)
+
+* Ratio (level-2)
+
+* School_ID (level-2: cluster)
+
+We run a classic OLS model to have some first impressions about the relation between these variables, and later we run some multilevel models since we are expecting differences both in intercept and slope for some schools (based on what we observed in the exploratory analysis).
+
+We propose the following models:
+
+(1) Classic OLS: $Math_i = \beta_0 + \beta_1 * SES_i + \beta_2 * Sex_i +  \beta_3 * Homework_i + \beta_4 * Public_i + \beta_5 * Ratio_i + e_i$
+
+(2) Random intercept-only Model: $Math_{ij} = \gamma_{00} + u_{0j} + e_{ij} $
+
+(3) Random coefficient - Only SES as level-1: $Math_{ij} = \beta_{0} + \beta_{1} * SES_{ij} + \beta_2 * Public_j + \beta_3 * Ratio_j + u_{j} + e_{ij} $
+
+(4) Random coefficient - Only Homework as level-1: $Math_{ij} = \beta_{0} + \beta_{1} * Homework_{ij} + \beta_2 * Public_j + \beta_3 * Ratio_j + u_{j} + e_{ij} $
+
+(5) Random coefficient - Homework + SES as level-1 $Math_{ij} = \beta_{0} + \beta_1 * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j + u_{j} + e_{ij} $
+
+(6) Random coefficient with SES random slope: $Math_{ij} = \beta_{00} + \beta_{10} * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j +  u_{0j} + e_{ij} $
+
+
+### (1) Classic OLS
+
+```{r}
+m.ols <- lm(math ~ ses + sex + homework + public + ratio, data = math)
+summary(m.ols)
+```
+
+
 
 
