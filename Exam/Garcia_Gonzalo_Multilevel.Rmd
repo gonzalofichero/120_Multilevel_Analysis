@@ -1,0 +1,229 @@
+---
+title: "European Doctoral School of Demography  \n Multilevel Analysis"
+author: "Gonzalo Garcia"
+date: "30/4/2021"
+output: html_document
+bibliography: multilevel.bib
+header-includes: 
+  - \renewcommand{\and}{\\}
+  - \usepackage{mathtools}
+  - \usepackage{mathrsfs}
+  - \usepackage{amsmath}
+  - \usepackage{amssymb}
+  - \usepackage{amsfonts}
+  - \usepackage{enumitem}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Introduction
+
+Previous literature has showed that SocioEconomic Status (SES) is one of the main predictors of school achievement [@cheadle2008educational]. Other characteristics are the amount of effort spent by the student, the amount of funding of the school and others. (ADD CITES!!!)
+
+In this report we will analyze the impact of this different characteristics for understanding Math scores of students in district X.
+
+# Exploratory Analysis
+
+```{r loading, results=FALSE}
+# Loading libraries
+library(lme4)
+library(lmerTest) # to get p-value in lme4
+library(tidyverse)
+library(ggplot2)
+library(lattice) # Useful graphs for multilevel models 
+library(performance) # for ICC measures 
+library(psych) # For descriptive statistics 
+library(readstata13) # to read data in dta
+library(sjPlot) # plot interaction within-between
+library(stargazer) # nice regression tables
+
+
+# Loading data
+math <- read.dta13("Exam/Exam21.dta")
+```
+
+
+We were provided with information of `r length(unique(math$schid))` schools, with `r length(unique(paste(math$stuid,"-",math$schid)))` in total. The information that we have for this observations is:
+
+* schid - School ID
+
+* stuid - Student ID
+
+* math - Math score
+
+* sex - Sex: 1 = male, 2 = female
+
+* ses - Socioecnonomic Status (continous scale)
+
+* meanses - Mean SES for the school
+
+* homework - Time spent on math homework each week
+
+* white - Race: 1 = white, 0 = non-white
+
+* parented - Parents highest education level (1-6 categories, higher=higher education level)
+
+* public - Public school: 1 = public, 0 = non-public
+
+* ratio - Student-teacher ratio
+
+* percmin - Percent minority in school
+
+## Differences by School
+
+A first glimpse to the data will provide information regarding the distribution of Math Scores for the different schools:
+
+```{r}
+densityplot(~ math, groups = schid, math,
+            plot.points = FALSE)
+```
+
+As can be observed, the schools differ in average results. This difference can be calculated by showing some descriptive statistics at school level:
+
+```{r, echo = FALSE}
+math %>%
+  group_by(schid) %>% 
+  summarise(Mean_Math = round(mean(math, na.rm = T),2),
+            SD_Math = round(sd(math, na.rm = T),2),
+            Median_Math = median(math, na.rm = T),
+            Max_Math = max(math, na.rm = T),
+            Min_Math = min(math, na.rm = T),
+            P25th_Math = quantile(math, 0.25),
+            P75th_Math = quantile(math, 0.75)
+            ) %>% 
+  data.frame() -> summary_math
+
+knitr::kable(summary_math)
+```
+
+
+
+## Relation between Characteristics and Math Scores
+
+At the same time, we would be interested in understanding the effect of some characteristics in Math scores.
+
+### Math ~ SES
+
+```{r}
+#----------------------------------------------------------
+# Plots: math ~ ses
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(ses, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light()+
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+```
+
+As expected (CITATION), we observe, mostly, a positive relation between SES and Math Scores.
+
+### Math ~ Homework
+
+```{r}
+#----------------------------------------------------------
+# Plots: math ~ homework
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(homework, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light()+
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+```
+
+In this case we also observe the expected relation: more time spent doing homework is related to better Math scores.
+
+
+### Math ~ Student-Teacher ratio
+
+As to School characteristics, we could expect that the lower the ST ratio, the better the results on Math scores, since students would have a more personalized teaching experience.
+
+When we plot the results we get:
+
+```{r}
+#----------------------------------------------------------
+# Plots: math ~ ratio
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(ratio, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light() +
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+```
+
+So, we find no relation between this variables.
+
+
+### Math ~ Sex
+
+Previous literature has found no significant difference between boys and girls as to educational achievement (CITATION).
+
+We can observe in this plot that for our sample there is no relation either:
+
+```{r}
+#----------------------------------------------------------
+# Plots: math ~ sex
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(color = as.factor(sex), x = math)) + # colours for schools 
+  geom_density() +
+  theme_light()
+```
+
+
+### Math ~ Public
+
+Even though we have no information regarding where data comes from, and which kind of selection bias we could have relating SES and the choice between public and private school, since it's a level-2 covariate, we will use it. In any case, we can see a difference in Math scores for these two characteristics:
+
+```{r}
+#----------------------------------------------------------
+# Plots: math ~ public
+#----------------------------------------------------------
+ggplot(data  = math,
+       aes(x = math, col=as.factor(public))) + # colours for schools 
+  geom_density()+
+  theme_light()
+```
+
+
+### Math ~ Why not Race and Education of parents?
+
+The last 2 covariates available for this analysis, could be correlated to SES. For understanding the scope of that possibility, we run a simple OLS regression:
+
+```{r}
+########################################################### 
+###                                                       #
+###   Confounding: SES ~?                                 #
+###                                                       #
+###########################################################
+summary(lm(ses ~ sex + white + parented, data = math))
+
+# Can't use race since it's confounding with SES. Same with Parent Education.
+```
+
+
+
+
+
+## Modeling
+
+Based in these last observations, we decided to use the following covariates:
+
+* 
+
+
