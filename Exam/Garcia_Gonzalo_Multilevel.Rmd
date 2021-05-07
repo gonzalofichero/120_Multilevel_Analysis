@@ -230,17 +230,17 @@ We run a classic OLS model to have some first impressions about the relation bet
 
 We propose the following models:
 
-(1) Classic OLS: $Math_i = \beta_0 + \beta_1 * SES_i + \beta_2 * Sex_i + \beta_3 * Homework_i + \beta_4 * Public_i + \beta_5 * Ratio_i + e_i$
+(1) Classic OLS: $ Math_i = \beta_0 + \beta_1 * SES_i + \beta_2 * Sex_i + \beta_3 * Homework_i + \beta_4 * Public_i + \beta_5 * Ratio_i + e_i $
 
-(2) Random intercept-only Model: \$Math\_{ij} = \gamma\*{00} + u\*{0j} + e\_{ij} \$
+(2) Random intercept-only Model: $ Math\_{ij} = \gamma*{00} + u*{0j} + e\_{ij} $
 
-(3) Random coefficient - Only SES as level-1: \$Math\_{ij} = \beta\*{0} +\* \beta{1} \* SES\_{ij} + \beta\*2 \* Public_j +\* \beta\*3 \* Ratio_j + u\*{j} + e{ij} \$
+(3) Random coefficient - Only SES as level-1: $ Math_{ij} = \beta_{0} +\beta_{1} * SES_{ij} + \beta_*_2 * Public_j +\beta_*_3 * Ratio_j + u_{j} + e_{ij} $
 
-(4) Random coefficient - Only Homework as level-1: \$Math\_{ij} = \beta\*{0} +\* \beta{1} \* Homework\_{ij} + \beta\*2 \* Public_j +\* \beta\*3 \* Ratio_j + u\*{j} + e{ij} \$
+(4) Random coefficient - Only Homework as level-1: $ Math_{ij} = \beta_{0} +\beta_{1} * Homework_{ij} + \beta_2 * Public_j +\beta_3 * Ratio_j + u_{j} + e_{ij} $
 
-(5) Random coefficient - Homework + SES as level-1 \$Math\_{ij} = \beta\*{0} +\* \beta\*1 \* SES*{ij} +* \beta{2} \* Homework\_{ij} + \beta\*3 \* Public_j + \beta\*4 \* Ratio_j + u\*{j} + e{ij} \$
+(5) Random coefficient - Homework + SES as level-1 $ Math_{ij} = \beta_{0} + \beta_1 * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j + u_{j} + e_{ij} $
 
-(6) Random coefficient with SES random slope: \$Math\_{ij} = \beta\*{00} +\* \beta{10} \* SES\_{ij} + \beta\*{2} \* Homework*{ij} +* \beta\*3 \* Public_j + \beta\*4 \* Ratio_j + u\*{0j} + e{ij} \$
+(6) Random coefficient with SES random slope: $ Math_{ij} = \beta_{00} + \beta_{10} * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j + u_{0j} + e_{ij} $
 
 ### (1) Classic OLS
 
