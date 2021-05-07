@@ -37,7 +37,9 @@ library(lattice) # Useful graphs for multilevel models
 library(performance) # for ICC measures 
 library(psych) # For descriptive statistics 
 library(readstata13) # to read data in dta
-library(sjPlot) # plot interaction within-between
+library(gridExtra) # for multiple plots together
+library(grid)
+library(grDevices) 
 
 # Loading data
 math <- read.dta13("Exam21.dta")
@@ -434,11 +436,14 @@ Nevertheless, we feel that there might be some spurious relation between level-2
 
 We can do a quick diagnostic of that model before going to the conclusions of this report:
 
-```{r}
-residplot(m.rc3)
+```{r, echo=FALSE, fig.cap="Diagnostic for final model", out.width = '100%'}
+knitr::include_graphics("diagnostic.png")
 ```
 
+
 Even though the Fitted vs Residual plot and the Normality of residuals plot seem to be fine, there is some kind of problem with the Normality assumption of the Random Intercept. Also, the Fitted vs Observed plot seems to be a little bit tilted. More analysis is needed to understand the reason for this behavior.
+
+\pagebreak
 
 ### Final Prediction
 
@@ -450,25 +455,27 @@ Finally, we can predict the impact of both SES and Homework on Math Scores, and 
 ### predicted values and interaction with the SES var
 math$pred1<- predict(m.rc3)
 
-par(mfrow=c(1,2))
+
 
 ggplot(data  = math,
        aes(ses, pred1,
            col = as.factor(schid))) +
-  geom_point(position = "jitter", alpha= .05) +  
+  geom_point(position = "jitter", alpha= .1) +  
   theme_light()+
   theme(legend.position = "none") +
-  geom_smooth(method = lm, se = FALSE, size = 1.5) 
+  geom_smooth(method = lm, se = FALSE, size = 1) -> p1
 
 ggplot(data  = math,
        aes(ses, math,
            col = schid,
            group = schid)) + # colours for schools 
-  geom_point(position = "jitter")+
+  geom_point(position = "jitter", alpha= .1)+
   theme_light()+
   scale_color_gradientn(colours = rainbow(23))+
   theme(legend.position = "none") +
-  geom_smooth(method = lm, se = FALSE, size=.3)
+  geom_smooth(method = lm, se = FALSE, size= 1) -> p2
+
+grid.arrange(p1, p2, ncol = 2)
 
 ```
 
@@ -478,26 +485,26 @@ ggplot(data  = math,
 ### predicted values and interaction with the SES var
 math$pred1<- predict(m.rc3)
 
-par(mfrow=c(1,2))
-
 ggplot(data  = math,
        aes(homework, pred1,
            col = as.factor(schid))) +
-  geom_point(position = "jitter", alpha= .05) +  
+  geom_point(position = "jitter", alpha= .1) +  
   theme_light()+
   theme(legend.position = "none") +
-  geom_smooth(method = lm, se = FALSE, size = 1.5) 
+  geom_smooth(method = lm, se = FALSE, size = 1) -> p3
 
 ggplot(data  = math,
        aes(homework, math,
            col = schid,
            group = schid)) + # colours for schools 
-  geom_point(position = "jitter")+
+  geom_point(position = "jitter", alpha= .1)+
   theme_light()+
   scale_color_gradientn(colours = rainbow(23))+
   theme(legend.position = "none") +
-  geom_smooth(method = lm, se = FALSE, size=.3)
+  geom_smooth(method = lm, se = FALSE, size= 1) -> p4
 
+
+grid.arrange(p3, p4, ncol = 2)
 ```
 
 ## Some Reflexions
