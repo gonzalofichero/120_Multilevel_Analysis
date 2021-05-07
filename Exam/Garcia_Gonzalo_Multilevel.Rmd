@@ -15,7 +15,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
 ```
 
 # Introduction
@@ -26,7 +26,7 @@ In this report we will analyze the impact of this different characteristics for 
 
 # Exploratory Analysis
 
-```{r loading, results=FALSE}
+```{r loading, results=FALSE, include=FALSE}
 # Loading libraries
 library(lme4)
 library(lmerTest) # to get p-value in lme4
@@ -38,8 +38,6 @@ library(performance) # for ICC measures
 library(psych) # For descriptive statistics 
 library(readstata13) # to read data in dta
 library(sjPlot) # plot interaction within-between
-library(stargazer) # nice regression tables
-
 
 # Loading data
 math <- read.dta13("Exam21.dta")
@@ -75,7 +73,7 @@ We were provided with information of `r length(unique(math$schid))` schools, wit
 
 A first glimpse to the data will provide information regarding the distribution of Math Scores for the different schools:
 
-```{r}
+```{r, echo = FALSE}
 densityplot(~ math, groups = schid, math,
             plot.points = FALSE)
 ```
@@ -119,7 +117,7 @@ ggplot(data  = math,
   geom_smooth(method = lm, se = FALSE, size=.3)
 ```
 
-As expected [@battle2002increasing, @broer2019review, @jorgensen2014structural], we observe, mostly, a positive relation between SES and Math Scores.
+As expected, we observe, mostly, a positive relation between SES and Math Scores [@battle2002increasing], [@broer2019review], [@jorgensen2014structural].
 
 ### Math \~ Homework
 
@@ -230,28 +228,25 @@ We run a classic OLS model to have some first impressions about the relation bet
 
 We propose the following models:
 
-(1) Classic OLS: $ Math_i = \beta_0 + \beta_1 * SES_i + \beta_2 * Sex_i + \beta_3 * Homework_i + \beta_4 * Public_i + \beta_5 * Ratio_i + e_i $
+(1) Classic OLS
 
-(2) Random intercept-only Model: $ Math\_{ij} = \gamma*{00} + u*{0j} + e\_{ij} $
+(2) Random intercept-only Model
 
-(3) Random coefficient - Only SES as level-1: $ Math_{ij} = \beta_{0} +\beta_{1} * SES_{ij} + \beta_*_2 * Public_j +\beta_*_3 * Ratio_j + u_{j} + e_{ij} $
+(3) Random coefficient - Only SES as level-1
 
-(4) Random coefficient - Only Homework as level-1: $ Math_{ij} = \beta_{0} +\beta_{1} * Homework_{ij} + \beta_2 * Public_j +\beta_3 * Ratio_j + u_{j} + e_{ij} $
+(4) Random coefficient - Only Homework as level-1
 
-(5) Random coefficient - Homework + SES as level-1 $ Math_{ij} = \beta_{0} + \beta_1 * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j + u_{j} + e_{ij} $
+(5) Random coefficient - Homework + SES as level-1
 
-(6) Random coefficient with SES random slope: $ Math_{ij} = \beta_{00} + \beta_{10} * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j + u_{0j} + e_{ij} $
+(6) Random coefficient with SES random slope
+
 
 ### (1) Classic OLS
 
 ```{r}
 m.ols <- lm(math ~ ses + sex + homework + public + ratio, data = math)
 
-stargazer(m.ols,
-          title = "OLS Model",
-          type="latex",
-          header = FALSE,
-          single.row = FALSE)
+summary(m.ols)
 ```
 
 We can observe in the previous table that SES and homework seem to be the most important covariates to explain Math Scores. But we have to take into account that the low significance of Public could be a result of using a level-2 variable as level-1. What is important about this model is that Sex is not a significant variable, as expected and we can skip it when moving on to multilevel models.
@@ -308,7 +303,7 @@ We can, again, check the ICC for this configuration:
 icc(m.rc1)
 ```
 
-And the Nakagawa R-squared (CITATION):
+And the Nakagawa R-squared [@nakagawa2013general]:
 
 ```{r}
 r2(m.rc1)
