@@ -2,7 +2,7 @@
 title: "European Doctoral School of Demography  \n Multilevel Analysis"
 author: "Gonzalo Garcia"
 date: "07/05/2021"
-output: html_document
+output: pdf_document
 bibliography: multilevel.bib
 header-includes: 
   - \renewcommand{\and}{\\}
