@@ -42,7 +42,7 @@ library(stargazer) # nice regression tables
 
 
 # Loading data
-math <- read.dta13("Exam/Exam21.dta")
+math <- read.dta13("Exam21.dta")
 ```
 
 We were provided with information of `r length(unique(math$schid))` schools, with `r length(unique(paste(math$stuid,"-",math$schid)))` in total. The information that we have for this observations is:
