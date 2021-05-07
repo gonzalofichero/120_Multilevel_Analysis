@@ -261,11 +261,7 @@ We can observe in the previous table that SES and homework seem to be the most i
 ```{r}
 m.null <- lmer(math ~ 1 + (1|schid), data = math) 
 
-stargazer(m.null,
-          title = "Multilevel null-model",
-          type="latex",
-          header = FALSE,
-          single.row = FALSE)
+summary(m.null)
 ```
 
 When running a simple null model, we can observe that the fixed effect of the intercept is significative.
@@ -301,12 +297,7 @@ Now it's time to add the first level-1 covariate: SES. We also add Public and Ra
 m.rc1 <- lmer(math ~ ses + public + ratio +
                      + (1 + ses|schid), data = math)
 
-stargazer(m.rc1,
-          title = "Random coefficient for SES",
-          type="latex",
-          header = FALSE,
-          single.row = FALSE)
-
+summary(m.rc1)
 ```
 
 SES is a highly relevant variable to explain Math scores, as was already expected both from the exploratory analysis and the literature review. We can observe also that level-2 covariates (other than the School ID) are not relevant. We keep them there since we are not expecting any confounding problem related to those.
@@ -333,11 +324,7 @@ Now we change the main covariate from SES to Homework and we can see that the va
 m.rc2 <- lmer(math ~ homework + public + ratio +
                 + (1 + homework|schid), data = math)
 
-stargazer(m.rc2,
-          title = "Random coefficient for Homework",
-          type="latex",
-          header = FALSE,
-          single.row = FALSE)
+summary(m.rc2)
 
 ```
 
@@ -361,11 +348,7 @@ We now add both level-1 covariates as random intercepts.
 m.rc3 <- lmer(math ~ homework + ses + public + ratio +
                 + (1 | schid), data = math)
 
-stargazer(m.rc3,
-          title = "Random coefficient for SES and Homework",
-          type="latex",
-          header = FALSE,
-          single.row = FALSE)
+summary(m.rc3)
 
 ```
 
@@ -384,11 +367,7 @@ We can go now to our final model, where to add a random slope to this model 5.
 m.rc4 <- lmer(math ~ homework + ses + public + ratio +
                 + (1 + ses | schid), data = math)
 
-stargazer(m.rc4,
-          title = "Random coefficient for SES and Homework, and random slope for SES",
-          type="latex",
-          header = FALSE,
-          single.row = FALSE)
+summary(m.rc4)
 
 ```
 
