@@ -257,8 +257,86 @@ We propose the following models:
 
 ```{r}
 m.ols <- lm(math ~ ses + sex + homework + public + ratio, data = math)
-summary(m.ols)
+
+stargazer(m.ols,
+          title = "OLS Model",
+          type="latex",
+          header = FALSE,
+          single.row = FALSE)
 ```
+
+We can observe in the previous table that SES and homework seem to be the most important covariates to explain Math Scores. But we have to take into account that the low significance of Public could be a result of using a level-2 variable as level-1. What is important about this model is that Sex is not a significant variable, as expected and we can skip it when moving on to multilevel models.
+
+
+### (2) Random intercept-only model (null-model)
+
+```{r}
+m.null <- lmer(math ~ 1 + (1|schid), data = math) 
+
+stargazer(m.null,
+          title = "Multilevel null-model",
+          type="latex",
+          header = FALSE,
+          single.row = FALSE)
+```
+
+When running a simple null model, we can observe that the fixed effect of the intercept is significative.
+
+We can also calculate the ICC to understand to what extent the clustering in Schools makes sense or not:
+
+```{r}
+icc(m.null)
+```
+
+Since almost 25% of variation can be explained through the difference between schools (clusters), we can continue using this approach to understand the impact of each covariate in the Math scores.
+
+We can observe the value of the fixed effect of each school in the following plot:
+
+```{r}
+dotplot(ranef(m.null, condVar = TRUE))  # plot random intercepts
+```
+
+Finally, and just in case, we check the normality of the residuals to see if we are meeting the assumption for this modeling:
+
+```{r}
+# Check normality
+qqnorm(resid(m.null),col="blue",lwd=2)
+```
+
+And yes, the residuals seem to be fitting to the theoretical quantiles from a Normal distribution.
+
+
+
+### (3) Random coefficient - Only SES as level-1
+
+Now it's time to add the first level-1 covariate: SES. We also add Public and Ratio as contextual level-2 covariates. 
+
+```{r}
+m.rc1 <- lmer(math ~ ses + public + ratio +
+                     + (1 + ses|schid), data = math)
+
+stargazer(m.rc1,
+          title = "Random coefficient for SES",
+          type="latex",
+          header = FALSE,
+          single.row = FALSE)
+
+```
+
+SES is a highly relevant variable to explain Math scores, as was already expected both from the exploratory analysis and the literature review. We can observe also that level-2 covariates (other than the School ID) are not relevant. We keep them there since we are not expecting any confounding problem related to those.
+
+We can, again, chech the ICC for this configuration:
+
+```{r}
+icc(m.rc1)
+```
+
+And the Nakagawa R2:
+
+```{r}
+r2(m.rc1)
+```
+
 
 
 
