@@ -1,7 +1,7 @@
 ---
 title: "European Doctoral School of Demography  \n Multilevel Analysis"
 author: "Gonzalo Garcia"
-date: "30/4/2021"
+date: "07/05/2021"
 output: html_document
 bibliography: multilevel.bib
 header-includes: 
@@ -18,11 +18,9 @@ header-includes:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-
 # Introduction
 
-Previous literature has showed that SocioEconomic Status (SES) is one of the main predictors of school achievement [@cheadle2008educational]. Other characteristics are the amount of effort spent by the student, the amount of funding of the school and others. (ADD CITES!!!)
+Previous literature has showed that SocioEconomic Status (SES) is one of the main predictors of school achievement [@cheadle2008educational]. Other characteristics are the amount of effort spent by the student, the amount of funding of the school and others [@sullivan2001cultural].
 
 In this report we will analyze the impact of this different characteristics for understanding Math scores of students in district X.
 
@@ -34,6 +32,7 @@ library(lme4)
 library(lmerTest) # to get p-value in lme4
 library(tidyverse)
 library(ggplot2)
+library(predictmeans) # diagnostic of multilevel model residuals
 library(lattice) # Useful graphs for multilevel models 
 library(performance) # for ICC measures 
 library(psych) # For descriptive statistics 
@@ -46,32 +45,31 @@ library(stargazer) # nice regression tables
 math <- read.dta13("Exam/Exam21.dta")
 ```
 
-
 We were provided with information of `r length(unique(math$schid))` schools, with `r length(unique(paste(math$stuid,"-",math$schid)))` in total. The information that we have for this observations is:
 
-* schid - School ID
+-   schid - School ID
 
-* stuid - Student ID
+-   stuid - Student ID
 
-* math - Math score
+-   math - Math score
 
-* sex - Sex: 1 = male, 2 = female
+-   sex - Sex: 1 = male, 2 = female
 
-* ses - Socioecnonomic Status (continous scale)
+-   ses - Socioecnonomic Status (continous scale)
 
-* meanses - Mean SES for the school
+-   meanses - Mean SES for the school
 
-* homework - Time spent on math homework each week
+-   homework - Time spent on math homework each week
 
-* white - Race: 1 = white, 0 = non-white
+-   white - Race: 1 = white, 0 = non-white
 
-* parented - Parents highest education level (1-6 categories, higher=higher education level)
+-   parented - Parents highest education level (1-6 categories, higher=higher education level)
 
-* public - Public school: 1 = public, 0 = non-public
+-   public - Public school: 1 = public, 0 = non-public
 
-* ratio - Student-teacher ratio
+-   ratio - Student-teacher ratio
 
-* percmin - Percent minority in school
+-   percmin - Percent minority in school
 
 ## Differences by School
 
@@ -100,13 +98,11 @@ math %>%
 knitr::kable(summary_math)
 ```
 
-
-
 ## Relation between Characteristics and Math Scores
 
 At the same time, we would be interested in understanding the effect of some characteristics in Math scores.
 
-### Math ~ SES
+### Math \~ SES
 
 ```{r}
 #----------------------------------------------------------
@@ -123,9 +119,9 @@ ggplot(data  = math,
   geom_smooth(method = lm, se = FALSE, size=.3)
 ```
 
-As expected (CITATION), we observe, mostly, a positive relation between SES and Math Scores.
+As expected [@battle2002increasing, @broer2019review, @jorgensen2014structural], we observe, mostly, a positive relation between SES and Math Scores.
 
-### Math ~ Homework
+### Math \~ Homework
 
 ```{r}
 #----------------------------------------------------------
@@ -144,8 +140,7 @@ ggplot(data  = math,
 
 In this case we also observe the expected relation: more time spent doing homework is related to better Math scores.
 
-
-### Math ~ Student-Teacher ratio
+### Math \~ Student-Teacher ratio
 
 As to School characteristics, we could expect that the lower the ST ratio, the better the results on Math scores, since students would have a more personalized teaching experience.
 
@@ -168,10 +163,9 @@ ggplot(data  = math,
 
 So, we find no relation between this variables.
 
+### Math \~ Sex
 
-### Math ~ Sex
-
-Previous literature has found no significant difference between boys and girls as to educational achievement (CITATION).
+Previous literature has found no significant difference between boys and girls as to educational achievement [@cheadle2008educational].
 
 We can observe in this plot that for our sample there is no relation either:
 
@@ -185,8 +179,7 @@ ggplot(data  = math,
   theme_light()
 ```
 
-
-### Math ~ Public
+### Math \~ Public
 
 Even though we have no information regarding where data comes from, and which kind of selection bias we could have relating SES and the choice between public and private school, since it's a level-2 covariate, we will use it. In any case, we can see a difference in Math scores for these two characteristics:
 
@@ -200,8 +193,7 @@ ggplot(data  = math,
   theme_light()
 ```
 
-
-### Math ~ Why not Race and Education of parents?
+### Math \~ Why not Race and Education of parents?
 
 The last 2 covariates available for this analysis, could be correlated to SES. For understanding the scope of that possibility, we run a simple OLS regression:
 
@@ -218,40 +210,37 @@ summary(lm(ses ~ sex + white + parented, data = math))
 
 We observe that Race and Parents Education (characteristics of individual: level-1) are correlated to SES. We understand that SES summarizes the explanatory power of these 2 covariates and we will use only SES for modeling.
 
-
-
 ## Modeling
 
 Based in these last observations, we decided to use the following covariates:
 
-* SES (level-1)
+-   SES (level-1)
 
-* Sex (level-1, although we are expecting no statistical significance)
+-   Sex (level-1, although we are expecting no statistical significance)
 
-* Homework (level-1)
+-   Homework (level-1)
 
-* Public (level-2)
+-   Public (level-2)
 
-* Ratio (level-2)
+-   Ratio (level-2)
 
-* School_ID (level-2: cluster)
+-   School_ID (level-2: cluster)
 
 We run a classic OLS model to have some first impressions about the relation between these variables, and later we run some multilevel models since we are expecting differences both in intercept and slope for some schools (based on what we observed in the exploratory analysis).
 
 We propose the following models:
 
-(1) Classic OLS: $Math_i = \beta_0 + \beta_1 * SES_i + \beta_2 * Sex_i +  \beta_3 * Homework_i + \beta_4 * Public_i + \beta_5 * Ratio_i + e_i$
+(1) Classic OLS: $Math_i = \beta_0 + \beta_1 * SES_i + \beta_2 * Sex_i + \beta_3 * Homework_i + \beta_4 * Public_i + \beta_5 * Ratio_i + e_i$
 
-(2) Random intercept-only Model: $Math_{ij} = \gamma_{00} + u_{0j} + e_{ij} $
+(2) Random intercept-only Model: \$Math\_{ij} = \gamma\*{00} + u\*{0j} + e\_{ij} \$
 
-(3) Random coefficient - Only SES as level-1: $Math_{ij} = \beta_{0} + \beta_{1} * SES_{ij} + \beta_2 * Public_j + \beta_3 * Ratio_j + u_{j} + e_{ij} $
+(3) Random coefficient - Only SES as level-1: \$Math\_{ij} = \beta\*{0} +\* \beta{1} \* SES\_{ij} + \beta\*2 \* Public_j +\* \beta\*3 \* Ratio_j + u\*{j} + e{ij} \$
 
-(4) Random coefficient - Only Homework as level-1: $Math_{ij} = \beta_{0} + \beta_{1} * Homework_{ij} + \beta_2 * Public_j + \beta_3 * Ratio_j + u_{j} + e_{ij} $
+(4) Random coefficient - Only Homework as level-1: \$Math\_{ij} = \beta\*{0} +\* \beta{1} \* Homework\_{ij} + \beta\*2 \* Public_j +\* \beta\*3 \* Ratio_j + u\*{j} + e{ij} \$
 
-(5) Random coefficient - Homework + SES as level-1 $Math_{ij} = \beta_{0} + \beta_1 * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j + u_{j} + e_{ij} $
+(5) Random coefficient - Homework + SES as level-1 \$Math\_{ij} = \beta\*{0} +\* \beta\*1 \* SES*{ij} +* \beta{2} \* Homework\_{ij} + \beta\*3 \* Public_j + \beta\*4 \* Ratio_j + u\*{j} + e{ij} \$
 
-(6) Random coefficient with SES random slope: $Math_{ij} = \beta_{00} + \beta_{10} * SES_{ij} + \beta_{2} * Homework_{ij} + \beta_3 * Public_j + \beta_4 * Ratio_j +  u_{0j} + e_{ij} $
-
+(6) Random coefficient with SES random slope: \$Math\_{ij} = \beta\*{00} +\* \beta{10} \* SES\_{ij} + \beta\*{2} \* Homework*{ij} +* \beta\*3 \* Public_j + \beta\*4 \* Ratio_j + u\*{0j} + e{ij} \$
 
 ### (1) Classic OLS
 
@@ -266,7 +255,6 @@ stargazer(m.ols,
 ```
 
 We can observe in the previous table that SES and homework seem to be the most important covariates to explain Math Scores. But we have to take into account that the low significance of Public could be a result of using a level-2 variable as level-1. What is important about this model is that Sex is not a significant variable, as expected and we can skip it when moving on to multilevel models.
-
 
 ### (2) Random intercept-only model (null-model)
 
@@ -305,11 +293,9 @@ qqnorm(resid(m.null),col="blue",lwd=2)
 
 And yes, the residuals seem to be fitting to the theoretical quantiles from a Normal distribution.
 
-
-
 ### (3) Random coefficient - Only SES as level-1
 
-Now it's time to add the first level-1 covariate: SES. We also add Public and Ratio as contextual level-2 covariates. 
+Now it's time to add the first level-1 covariate: SES. We also add Public and Ratio as contextual level-2 covariates.
 
 ```{r}
 m.rc1 <- lmer(math ~ ses + public + ratio +
@@ -325,19 +311,228 @@ stargazer(m.rc1,
 
 SES is a highly relevant variable to explain Math scores, as was already expected both from the exploratory analysis and the literature review. We can observe also that level-2 covariates (other than the School ID) are not relevant. We keep them there since we are not expecting any confounding problem related to those.
 
-We can, again, chech the ICC for this configuration:
+We can, again, check the ICC for this configuration:
 
 ```{r}
 icc(m.rc1)
 ```
 
-And the Nakagawa R2:
+And the Nakagawa R-squared (CITATION):
 
 ```{r}
 r2(m.rc1)
 ```
 
+If we define a threshold of 5%, the ICC of 15% is telling us that we are still OK using a multilevel approach. At the same time, we can say that around 30% of the variance is explained by the model and almost 19% of variance is explained by the fixed effect of clustering the data.
+
+### (4) Random coefficient - Only Homework as level-1
+
+Now we change the main covariate from SES to Homework and we can see that the variable is also significant and positively related to Math Score:
+
+```{r}
+m.rc2 <- lmer(math ~ homework + public + ratio +
+                + (1 + homework|schid), data = math)
+
+stargazer(m.rc2,
+          title = "Random coefficient for Homework",
+          type="latex",
+          header = FALSE,
+          single.row = FALSE)
+
+```
+
+It's interesting that now Public has some statistical power. Is it possible to be relation between homework and the Public/Private characteristic of the school?
+
+```{r}
+icc(m.rc2)
+```
+
+```{r}
+r2(m.rc2)
+```
+
+With this model we have been able to increase the percentage of variance explained by the model from 30% to almost 60%, but the fixed effect is less now.
+
+### (5) Random coefficient - Homework + SES as level-1
+
+We now add both level-1 covariates as random intercepts.
+
+```{r}
+m.rc3 <- lmer(math ~ homework + ses + public + ratio +
+                + (1 | schid), data = math)
+
+stargazer(m.rc3,
+          title = "Random coefficient for SES and Homework",
+          type="latex",
+          header = FALSE,
+          single.row = FALSE)
+
+```
+
+```{r}
+icc(m.rc3)
+r2(m.rc3)
+```
+
+Now, as in model 2, only the level-1 variables are statistically significant. The ICC has dropped to 16% and almost 40% of the variance can be explained by this model.
+
+We can go now to our final model, where to add a random slope to this model 5.
+
+### (6) Random coefficient with SES random slope
+
+```{r}
+m.rc4 <- lmer(math ~ homework + ses + public + ratio +
+                + (1 + ses | schid), data = math)
+
+stargazer(m.rc4,
+          title = "Random coefficient for SES and Homework, and random slope for SES",
+          type="latex",
+          header = FALSE,
+          single.row = FALSE)
+
+```
+
+```{r}
+icc(m.rc4)
+r2(m.rc4)
+```
+
+Adding a random slope for SES has not changed by much the measures we calculated before: ICC and R-squared. At the same time, the fixed effect slopes are not that different than from model 5. At a first glance, it seems that model 6 is adding unnecessary complexity.
+
+We can now try to compare models and choose the most suited one.
+
+## Comparing Models
+
+### Anova
+
+We can run Anova tests to understand if adding more covariates to the model gives significant explanatory power to our modeling or not.
+
+#### Adding 1 more covariate to Null model
+
+For both SES:
+
+```{r}
+anova(m.null, m.rc1)
+```
+
+As for Homework:
+
+```{r}
+anova(m.null, m.rc2)
+```
+
+Adding covariates for random coefficient effects helps us explain better the results of the Math Scores.
+
+#### Adding random slope
+
+```{r}
+anova(m.rc3, m.rc4)
+```
+
+As was expected, adding random slope to the model is unnecessary.
+
+### AIC + BIC
+
+We can calculate both AIC and BIC measures for all models and see which one has the lowest value.
+
+#### AIC
+
+```{r}
+# Also checking AIC and BIC of all models
+AIC(m.ols, m.null, m.rc1, m.rc2, m.rc3, m.rc4)
+```
+
+Based on AIC, the model using a random intercept and slope for Homework should be the one selected.
+
+#### BIC
+
+```{r}
+BIC(m.ols, m.null, m.rc1, m.rc2, m.rc3, m.rc4)
+```
+
+The same happens when using BIC.
+
+## Model decision and Diagnostic
+
+Nevertheless, we feel that there might be some spurious relation between level-2 covariate Public and level-1 covariate Homework. And since we know that adding the random slope for SES is not statistically significant, we decide to use the model where both SES and Homework are used for random intercept, but no random slope is used.
+
+### Diagnostic
+
+We can do a quick diagnostic of that model before going to the conclusions of this report:
+
+```{r}
+residplot(m.rc3)
+```
+
+Even though the Fitted vs Residual plot and the Normality of residuals plot seem to be fine, there is some kind of problem with the Normality assumption of the Random Intercept. Also, the Fitted vs Observed plot seems to be a little bit tilted. More analysis is needed to understand the reason for this behavior.
+
+### Final Prediction
+
+Finally, we can predict the impact of both SES and Homework on Math Scores, and compare to the observed values:
+
+#### SES: Predicted vs Real
+
+```{r, echo = FALSE}
+### predicted values and interaction with the SES var
+math$pred1<- predict(m.rc3)
+
+par(mfrow=c(1,2))
+
+ggplot(data  = math,
+       aes(ses, pred1,
+           col = as.factor(schid))) +
+  geom_point(position = "jitter", alpha= .05) +  
+  theme_light()+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size = 1.5) 
+
+ggplot(data  = math,
+       aes(ses, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light()+
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+
+```
+
+#### Homework: Predicted vs Real
+
+```{r, echo = FALSE}
+### predicted values and interaction with the SES var
+math$pred1<- predict(m.rc3)
+
+par(mfrow=c(1,2))
+
+ggplot(data  = math,
+       aes(homework, pred1,
+           col = as.factor(schid))) +
+  geom_point(position = "jitter", alpha= .05) +  
+  theme_light()+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size = 1.5) 
+
+ggplot(data  = math,
+       aes(homework, math,
+           col = schid,
+           group = schid)) + # colours for schools 
+  geom_point(position = "jitter")+
+  theme_light()+
+  scale_color_gradientn(colours = rainbow(23))+
+  theme(legend.position = "none") +
+  geom_smooth(method = lm, se = FALSE, size=.3)
+
+```
+
+## Some Reflexions
+
+Through a quick exploratory analysis and running some regression models, we can conclude that both SES and Homework are important variables to explain the results of Math Scores. We also know that using a multilevel approach is the best suited solution for this particular data set.
+
+Our findings replicate those found in literature, but more research is needed to understand possible interactions between characteristics of schools (contextual) and characteristics of children.
+
+\pagebreak
 
 
-
-
+### References
